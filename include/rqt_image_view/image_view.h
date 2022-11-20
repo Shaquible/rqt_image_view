@@ -55,106 +55,104 @@
 
 #include <vector>
 
-namespace rqt_image_view {
-
-class ImageView
-  : public rqt_gui_cpp::Plugin
+namespace rqt_image_view
 {
 
-  Q_OBJECT
+  class ImageView
+      : public rqt_gui_cpp::Plugin
+  {
 
-public:
+    Q_OBJECT
 
-  ImageView();
+  public:
+    ImageView();
 
-  virtual void initPlugin(qt_gui_cpp::PluginContext& context);
+    virtual void initPlugin(qt_gui_cpp::PluginContext &context);
 
-  virtual void shutdownPlugin();
+    virtual void shutdownPlugin();
 
-  virtual void saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_gui_cpp::Settings& instance_settings) const;
+    virtual void saveSettings(qt_gui_cpp::Settings &plugin_settings, qt_gui_cpp::Settings &instance_settings) const;
 
-  virtual void restoreSettings(const qt_gui_cpp::Settings& plugin_settings, const qt_gui_cpp::Settings& instance_settings);
+    virtual void restoreSettings(const qt_gui_cpp::Settings &plugin_settings, const qt_gui_cpp::Settings &instance_settings);
 
-protected slots:
+  protected slots:
 
-  virtual void setColorSchemeList();
+    virtual void setColorSchemeList();
 
-  virtual void updateTopicList();
+    virtual void updateTopicList();
 
-protected:
+  protected:
+    // deprecated function for backward compatibility only, use getTopics() instead
+    ROS_DEPRECATED virtual QList<QString> getTopicList(const QSet<QString> &message_types, const QList<QString> &transports);
 
-  // deprecated function for backward compatibility only, use getTopics() instead
-  ROS_DEPRECATED virtual QList<QString> getTopicList(const QSet<QString>& message_types, const QList<QString>& transports);
+    virtual QSet<QString> getTopics(const QSet<QString> &message_types, const QSet<QString> &message_sub_types, const QList<QString> &transports);
 
-  virtual QSet<QString> getTopics(const QSet<QString>& message_types, const QSet<QString>& message_sub_types, const QList<QString>& transports);
+    virtual void selectTopic(const QString &topic);
 
-  virtual void selectTopic(const QString& topic);
+  protected slots:
 
-protected slots:
+    virtual void onTopicChanged(int index);
 
-  virtual void onTopicChanged(int index);
+    virtual void onZoom1(bool checked);
 
-  virtual void onZoom1(bool checked);
+    virtual void onDynamicRange(bool checked);
 
-  virtual void onDynamicRange(bool checked);
+    virtual void saveImage();
 
-  virtual void saveImage();
+    virtual void updateNumGridlines();
 
-  virtual void updateNumGridlines();
+    virtual void onMousePublish(bool checked);
 
-  virtual void onMousePublish(bool checked);
+    virtual void onMouseLeft(int x, int y);
 
-  virtual void onMouseLeft(int x, int y);
+    virtual void onPubTopicChanged();
 
-  virtual void onPubTopicChanged();
+    virtual void onHideToolbarChanged(bool hide);
 
-  virtual void onHideToolbarChanged(bool hide);
+    virtual void onRotateLeft();
+    virtual void onRotateRight();
 
-  virtual void onRotateLeft();
-  virtual void onRotateRight();
+  protected:
+    virtual void callbackImage(const sensor_msgs::Image::ConstPtr &msg);
 
-protected:
+    virtual void invertPixels(int x, int y);
 
-  virtual void callbackImage(const sensor_msgs::Image::ConstPtr& msg);
+    QList<int> getGridIndices(int size) const;
 
-  virtual void invertPixels(int x, int y);
+    virtual void overlayGrid();
 
-  QList<int> getGridIndices(int size) const;
+    Ui::ImageViewWidget ui_;
 
-  virtual void overlayGrid();
+    QWidget *widget_;
 
-  Ui::ImageViewWidget ui_;
+    image_transport::Subscriber subscriber_;
 
-  QWidget* widget_;
+    cv::Mat conversion_mat_;
 
-  image_transport::Subscriber subscriber_;
+  private:
+    enum RotateState
+    {
+      ROTATE_0 = 0,
+      ROTATE_90 = 1,
+      ROTATE_180 = 2,
+      ROTATE_270 = 3,
 
-  cv::Mat conversion_mat_;
+      ROTATE_STATE_COUNT
+    };
 
-private:
+    void syncRotateLabel();
+    // maybe change this topic name
+    QString arg_topic_name;
+    ros::Publisher pub_mouse_left_;
 
-  enum RotateState {
-    ROTATE_0 = 0,
-    ROTATE_90 = 1,
-    ROTATE_180 = 2,
-    ROTATE_270 = 3,
+    bool pub_topic_custom_;
 
-    ROTATE_STATE_COUNT
+    QAction *hide_toolbar_action_;
+
+    int num_gridlines_;
+
+    RotateState rotate_state_;
   };
-
-  void syncRotateLabel();
-
-  QString arg_topic_name;
-  ros::Publisher pub_mouse_left_;
-
-  bool pub_topic_custom_;
-
-  QAction* hide_toolbar_action_;
-
-  int num_gridlines_;
-
-  RotateState rotate_state_;
-};
 
 }
 
